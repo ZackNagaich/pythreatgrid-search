@@ -6,9 +6,19 @@ from pythreatgrid.threatgrid import get_analysis, search_samples, requests
 
 #Global to determine depth of recursion
 _RECURSION_DEPTH = 3
-
+#Global to limit results of API calls
+_LIMIT = 10
 
 def search_samples(options):
+	'''Override search_samples in pythreatgrid (direct GET request seems a bit faster, as opposed to generator yields)
+
+	Args:
+		options (dict): Options for the API request.
+
+	Returns:
+		 json_resp (dict): JSON object for API return 
+	'''
+
 	_HOST = 'https://panacea.threatgrid.com'
 	'''str: Represents the host that the API will connect to.
 	'''
@@ -122,9 +132,9 @@ def recursive_search(sample_list,options,depth=0):
 		depth += 1
 		print("\n[+] Total number of Samples: %s" % str(len(sample_list)))
 		#get related ips for each sample in sample_list, limit results to 10 ip's for performance
-		ips = get_related_ip(options,sample_list)[:10]
+		ips = get_related_ip(options,sample_list)[:_LIMIT]
 		#get related hashes for each sample in sample_list, limit results to 10 hashes for performance
-		hashes = get_related_hashes(options,sample_list)[:10]
+		hashes = get_related_hashes(options,sample_list)[:_LIMIT]
 
 		new_sample_list = list()
 		print("\n[+] Searching for samples based off related IOC's...")
@@ -200,9 +210,11 @@ def main():
 	parser.add_argument('--ioc', type=str,
 		help='IOC to search for')
 	parser.add_argument('--limit', type=str,
-		help='Limit API results')
+		help='Limit API results (Default: 10)')
 	parser.add_argument('--tag', type=str,
 		help='Tag name to look for')
+	parser.add_argument('--depth', type=int,
+		help='Desired depth of recursion (Default: 3)')
 
 	args = 	parser.parse_args()
 
@@ -228,14 +240,25 @@ def main():
 		'ioc' : args.ioc,
 		'limit' : args.limit,
 		'tag' : args.tag,
+		'depth': args.depth
 	}
 
 	#remove options that are None, makes API call cleaner
 	options = {k:v for k,v in options.items() if v is not None}
 
-	#Limit returned results for API queries to 10, for performance/testing reasons
-	if 'limit' not in options:
+	#Limit returned results for API queries, advised for performance/testing reasons
+	if 'limit' in options:
+		global _LIMIT
+		_LIMIT = int(args.limit)
+	else:
 		options['limit'] = 10
+
+	#Use user supplied recursion depth
+	if 'depth' in options:
+		global _RECURSION_DEPTH
+		_RECURSION_DEPTH = args.depth
+		#remove depth from options once we get value, API calls don't need to see this
+		del options['depth']
 
 	#query for initial samples with provided IOC's
 	sample_list = query_samples(options)
