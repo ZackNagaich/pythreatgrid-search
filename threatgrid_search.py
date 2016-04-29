@@ -69,7 +69,7 @@ def get_related_ip(options,sample_list):
 		for item in analysis[u'network']:
 				ips.append(analysis[u'network'][item][u'dst'])
 	print("\n[+] De-duplicating discovered IP addresses...")			
-	dedup(ips)
+	ips = dedup(ips)
 	return ips
 
 def get_related_hashes(options,sample_list):
@@ -94,7 +94,7 @@ def get_related_hashes(options,sample_list):
 			hashes.append(analysis[u'artifacts'][item][u'sha256'])
 			hashes.append(analysis[u'artifacts'][item][u'sha1'])
 	print("\n[+] De-duplicating related hashes...")
-	dedup(hashes)
+	hashes = dedup(hashes)
 	return hashes
 
 def query_samples(options):
@@ -155,7 +155,7 @@ def recursive_search(sample_list,options,depth=0):
 			new_sample_list.extend(query_samples(options))
 
 		print("\n[+] De-duplicating new list of samples...")
-		dedup(new_sample_list)
+		new_sample_list = dedup(new_sample_list)
 		print("[+] Recursion Depth %s" % str(depth))
 		sample_list.extend(recursive_search(new_sample_list,options,depth))
 		return sample_list
