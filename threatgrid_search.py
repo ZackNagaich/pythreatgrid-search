@@ -263,7 +263,7 @@ def main():
 	#query for initial samples with provided IOC's
 	sample_list = query_samples(options)
 	#start recursive search, grabbing IOCs from seed samples to search for more related samples
-	sample_list = recursive_search(sample_list,options)
+	sample_list = dedup(recursive_search(sample_list,options))
 
 	#output samples to file
 	fp = open("sample_list.txt","w")
